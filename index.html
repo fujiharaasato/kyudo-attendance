@@ -1,50 +1,659 @@
-import speech_recognition as sr
-import google.generativeai as genai
-import subprocess
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>弓道部 出席管理</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F8F5F0; --surface: #FFFFFF; --surface2: #F2EDE6;
+    --text: #1A1510; --text2: #6B5F54; --text3: #A89D93;
+    --red: #8B2020; --red-light: #F5E6E6; --red-mid: #D4A4A4;
+    --gold: #C4943A; --blue: #2058A8;
+    --wed-bg: #EBE9E5; --wed-text: #AAA09A;
+    --border: rgba(0,0,0,0.10); --border2: rgba(0,0,0,0.18);
+    --radius: 10px; --radius-lg: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1A1510; --surface: #252018; --surface2: #2E2820;
+      --text: #F0EBE3; --text2: #A89D93; --text3: #6B5F54;
+      --red: #C0392B; --red-light: #2A1515; --red-mid: #7A3030;
+      --gold: #D4A843; --blue: #6A9FD4;
+      --wed-bg: #201D18; --wed-text: #5A5550;
+      --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.18);
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 80px;
+  }
+  .header {
+    background: var(--surface); padding: 14px 16px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header h1 { font-size: 17px; font-weight: 600; }
+  .header-month { font-size: 13px; color: var(--text2); }
+  .tabs {
+    display: flex; background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    position: sticky; top: 57px; z-index: 49;
+  }
+  .tab-btn {
+    flex: 1; padding: 11px 0; font-size: 13px;
+    background: none; border: none; border-bottom: 2px solid transparent;
+    cursor: pointer; color: var(--text2); transition: all .15s;
+  }
+  .tab-btn.active { color: var(--red); border-bottom-color: var(--red); font-weight: 500; }
+  .tab-content { display: none; padding: 14px; }
+  .tab-content.active { display: block; }
 
-# --- 設定 ---
-# ※ 「Gemini Project 2」で作った新しいキーを入れてください
-API_KEY = "AIzaSyCi2SaKGZ7NbQwvJzjiXik_aBfwAZW7gwg" 
+  /* 画像エリア */
+  .img-drop {
+    border: 1.5px dashed var(--border2); border-radius: var(--radius-lg);
+    padding: 18px; text-align: center; cursor: pointer;
+    background: var(--surface); color: var(--text2);
+    font-size: 13px; margin-bottom: 14px; min-height: 90px;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+  }
+  .img-drop.has-img { padding: 8px; }
+  .img-drop img { max-width: 100%; max-height: 240px; border-radius: 8px; }
+  #imgInput { display: none; }
 
-# 【重要】ライブラリを最新の正式版(v1)で動くように設定します
-genai.configure(api_key=API_KEY, transport='rest')
+  /* 一括 */
+  .bulk-card {
+    background: var(--surface); border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border); padding: 12px; margin-bottom: 14px;
+  }
+  .bulk-card-title { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .06em; margin-bottom: 8px; }
+  .bulk-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .bulk-btn {
+    font-size: 12px; padding: 6px 12px;
+    border: 0.5px solid var(--border2); background: var(--surface2);
+    border-radius: 20px; cursor: pointer; color: var(--text); transition: all .12s;
+  }
+  .dow-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .dow-pill {
+    font-size: 11px; padding: 4px 9px; border: 0.5px solid var(--border2);
+    border-radius: 20px; cursor: pointer; background: var(--surface2); color: var(--text2); transition: all .12s;
+  }
+  .dow-pill.excluded { background: var(--red); color: #fff; border-color: var(--red); }
+  .dow-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
 
-# モデル名をあえてフルネームで指定
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+  /* カレンダー */
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-nav-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 0.5px solid var(--border2); background: var(--surface);
+    cursor: pointer; color: var(--text2); font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-month { font-size: 15px; font-weight: 600; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-dow { font-size: 10px; font-weight: 600; text-align: center; padding: 5px 0; color: var(--text3); }
+  .cal-dow.sun-h { color: #C0392B; }
+  .cal-dow.sat-h { color: var(--blue); }
+  .cal-dow.wed-h { color: var(--wed-text); }
+  .cal-day {
+    aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer;
+    border: 0.5px solid var(--border); background: var(--surface);
+    transition: all .12s; min-height: 42px; gap: 1px;
+  }
+  .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+  .cal-day.wed-day { background: var(--wed-bg); border-color: transparent; cursor: default; }
+  .cal-day.wed-day .d-num { color: var(--wed-text) !important; }
+  .cal-day.sun-day .d-num { color: #C0392B; }
+  .cal-day.sat-day .d-num { color: var(--blue); }
+  .cal-day.today { border-color: var(--gold) !important; }
+  .d-num { font-size: 13px; font-weight: 500; line-height: 1; }
+  .d-count { font-size: 9px; color: var(--text3); line-height: 1; }
+  .cal-day.my-checked { background: var(--red-light); border-color: var(--red); }
+  .cal-day.my-checked .d-num { color: var(--red); font-weight: 600; }
+  .mato-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); display: none; }
+  .cal-day.my-checked .mato-dot { display: block; }
 
-def speak(text):
-    print(f"ジャービス: {text}")
-    subprocess.run(["say", text])
+  /* 一覧 */
+  .list-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: var(--surface); border-radius: 10px; border: 0.5px solid var(--border);
+    margin-bottom: 5px; cursor: pointer; transition: all .12s;
+  }
+  .list-item.wed-item { background: var(--wed-bg); border-color: transparent; cursor: default; opacity: .55; }
+  .li-date { font-size: 13px; font-weight: 600; min-width: 52px; }
+  .li-dow { font-size: 11px; min-width: 18px; }
+  .li-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+  .li-fill { height: 100%; background: var(--red); border-radius: 3px; transition: width .3s; }
+  .li-cnt { font-size: 12px; color: var(--text2); min-width: 36px; text-align: right; }
 
-def listen():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("聴取中...")
-        try:
-            r.adjust_for_ambient_noise(source, duration=0.5)
-            audio = r.listen(source, timeout=10, phrase_time_limit=10)
-            text = r.recognize_google(audio, language='ja-JP')
-            print(f"あなた: {text}")
-            return text
-        except:
-            return None
+  /* 設定 */
+  .setting-card { background: var(--surface); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 14px; margin-bottom: 12px; }
+  .setting-card-title { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .06em; margin-bottom: 10px; }
+  .member-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .member-btn {
+    font-size: 13px; padding: 7px 14px; border-radius: 20px;
+    border: 0.5px solid var(--border2); background: var(--surface2); color: var(--text);
+    cursor: pointer; transition: all .12s;
+  }
+  .member-btn.me { background: var(--red); color: #fff; border-color: var(--red); }
+  .add-row { display: flex; gap: 8px; }
+  .name-input {
+    flex: 1; font-size: 13px; padding: 8px 12px;
+    border: 0.5px solid var(--border2); border-radius: 10px;
+    background: var(--surface2); color: var(--text); outline: none;
+  }
+  .name-input:focus { border-color: var(--red); }
+  .add-btn { padding: 8px 14px; background: var(--red); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; }
+  .member-chip-del {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+    padding: 5px 10px; border-radius: 20px; background: var(--surface2);
+    border: 0.5px solid var(--border); color: var(--text);
+  }
+  .del-x { color: var(--text3); cursor: pointer; font-size: 14px; }
 
-def main():
-    speak("全システムオンライン。準備完了です。")
-    while True:
-        user_input = listen()
-        if user_input:
-            if any(word in user_input for word in ["終了", "停止"]):
-                speak("了解しました。")
-                break
-            try:
-                # 簡潔に答えるよう指示
-                response = model.generate_content(f"あなたは執事ジャービスです。簡潔に：{user_input}")
-                speak(response.text)
-            except Exception as e:
-                # 404が出た場合、ここが反応します
-                print(f"詳細エラー: {e}")
-                speak("エラーが発生しました。")
+  /* モーダル */
+  .overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.5); align-items: flex-end; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 18px 18px 0 0;
+    padding: 20px; width: 100%; max-width: 480px; max-height: 80vh; overflow-y: auto;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 22px; line-height: 1; }
+  .attendee-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .att-chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; background: var(--red-light); color: var(--red); border: 0.5px solid var(--red-mid); }
+  .modal-empty { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+  .modal-action {
+    width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--red); transition: all .15s;
+  }
+  .modal-action.going { background: var(--red); color: #fff; }
+  .modal-action.not-going { background: transparent; color: var(--red); }
+  .modal-hint { font-size: 11px; color: var(--text3); text-align: center; margin-top: 8px; }
 
-if __name__ == "__main__":
-    main()
+  /* ローディング */
+  .loading { text-align: center; padding: 40px; color: var(--text2); font-size: 13px; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
+    font-size: 13px; z-index: 300; opacity: 0; transition: opacity .3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* 名前入力モーダル */
+  .name-modal-bg {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+  }
+  .name-modal-bg.open { display: flex; }
+  .name-modal {
+    background: var(--surface); border-radius: var(--radius-lg);
+    padding: 24px; width: 90%; max-width: 340px; text-align: center;
+  }
+  .name-modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .name-modal p { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+  .name-modal-input {
+    width: 100%; font-size: 15px; padding: 10px 14px;
+    border: 0.5px solid var(--border2); border-radius: 10px;
+    background: var(--surface2); color: var(--text); outline: none; margin-bottom: 12px;
+  }
+  .name-modal-btn {
+    width: 100%; padding: 12px; background: var(--red); color: #fff;
+    border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="12" stroke="#8B2020" stroke-width="1.8"/>
+      <circle cx="14" cy="14" r="7.5" stroke="#8B2020" stroke-width="1.2"/>
+      <circle cx="14" cy="14" r="3.5" stroke="#8B2020" stroke-width="1"/>
+      <circle cx="14" cy="14" r="1.5" fill="#8B2020"/>
+    </svg>
+    <h1>弓道部 出席管理</h1>
+  </div>
+  <span class="header-month" id="headerMonth"></span>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('calendar')">📅 カレンダー</button>
+  <button class="tab-btn" onclick="showTab('list')">📋 一覧</button>
+  <button class="tab-btn" onclick="showTab('settings')">⚙️ 設定</button>
+</div>
+
+<div class="tab-content active" id="tab-calendar">
+  <div class="img-drop" id="imgArea" onclick="document.getElementById('imgInput').click()">
+    <div style="font-size:28px;">🖼️</div>
+    <div>月間予定表の画像を追加</div>
+    <div style="font-size:11px;color:var(--text3);">タップして選択</div>
+  </div>
+  <input type="file" id="imgInput" accept="image/*">
+
+  <div class="bulk-card">
+    <div class="bulk-card-title">一括チェック</div>
+    <div class="bulk-row">
+      <button class="bulk-btn" onclick="checkAll()">✅ 全日チェック</button>
+      <button class="bulk-btn" onclick="clearAll()">❌ 全てクリア</button>
+      <button class="bulk-btn" onclick="checkExcluding()">🔍 除外曜日を除いてチェック</button>
+    </div>
+    <div class="dow-label">除外する曜日（タップで選択）：</div>
+    <div class="dow-row" id="dowPills"></div>
+  </div>
+
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="prevMonth()">‹</button>
+    <span class="cal-month" id="calLabel"></span>
+    <button class="cal-nav-btn" onclick="nextMonth()">›</button>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<div class="tab-content" id="tab-list">
+  <div id="listView"></div>
+</div>
+
+<div class="tab-content" id="tab-settings">
+  <div class="setting-card">
+    <div class="setting-card-title">あなた（自分を選択）</div>
+    <div class="member-grid" id="memberGrid"></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;">選択した名前でカレンダーに反映されます</div>
+  </div>
+  <div class="setting-card">
+    <div class="setting-card-title">部員を追加</div>
+    <div class="add-row">
+      <input class="name-input" id="newMemberInput" placeholder="名前を入力..." type="text">
+      <button class="add-btn" onclick="addMember()">追加</button>
+    </div>
+  </div>
+  <div class="setting-card">
+    <div class="setting-card-title">部員一覧</div>
+    <div class="member-grid" id="memberList"></div>
+  </div>
+</div>
+
+<!-- 詳細モーダル -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="attendee-list" id="modalAttendees"></div>
+    <div class="modal-empty" id="modalEmpty" style="display:none">まだ誰も参加登録していません</div>
+    <button class="modal-action going" id="modalAction" onclick="toggleMyAttendance()"></button>
+    <div class="modal-hint" id="modalHint"></div>
+  </div>
+</div>
+
+<!-- 名前入力モーダル -->
+<div class="name-modal-bg" id="nameModalBg">
+  <div class="name-modal">
+    <div style="font-size:36px;margin-bottom:8px;">🎯</div>
+    <h2>弓道部 出席管理</h2>
+    <p>はじめに名前を入力してください</p>
+    <input class="name-modal-input" id="nameModalInput" placeholder="例：田中" type="text" maxlength="20">
+    <button class="name-modal-btn" onclick="saveName()">はじめる</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://ssgeklavhgodpzxobndr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzZ2VrbGF2aGdvZHB6eG9ibmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTM4OTAsImV4cCI6MjA5Njg4OTg5MH0.dAqHhvk-7Hw01iryXVSPq16g-d0z6E3HrogX0zwXa1k';
+
+const DOW = ['日','月','火','水','木','金','土'];
+
+let st = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+  myName: localStorage.getItem('kyudo_myname') || '',
+  members: [],
+  attendance: {},
+  excludedDows: JSON.parse(localStorage.getItem('kyudo_excluded') || '[3]'),
+  activeModal: null
+};
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'resolution=merge-duplicates,return=minimal' : 'return=minimal'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  if (method === 'GET') return res.json();
+  return res;
+}
+
+async function loadData() {
+  try {
+    const [members, att] = await Promise.all([
+      api('GET', 'members?select=name&order=id'),
+      api('GET', 'attendance?select=date,member_name')
+    ]);
+    st.members = members.map(m => m.name);
+    st.attendance = {};
+    att.forEach(a => {
+      if (!st.attendance[a.date]) st.attendance[a.date] = [];
+      st.attendance[a.date].push(a.member_name);
+    });
+    renderAll();
+  } catch(e) {
+    showToast('データの読み込みに失敗しました');
+  }
+}
+
+function key(y, m, d) {
+  return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+}
+function getAtt(k) { return st.attendance[k] || []; }
+function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
+function firstDow(y, m) { return new Date(y, m, 1).getDay(); }
+
+function renderCalendar() {
+  document.getElementById('calLabel').textContent = st.year + '年' + (st.month+1) + '月';
+  document.getElementById('headerMonth').textContent = (st.month+1) + '月　' + (st.myName || '名前未設定');
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  [
+    {label:'日',cls:'sun-h'},{label:'月',cls:''},{label:'火',cls:''},
+    {label:'水',cls:'wed-h'},{label:'木',cls:''},{label:'金',cls:''},{label:'土',cls:'sat-h'}
+  ].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow ' + d.cls;
+    el.textContent = d.label;
+    grid.appendChild(el);
+  });
+  const first = firstDow(st.year, st.month);
+  const days = daysInMonth(st.year, st.month);
+  const today = new Date();
+  for (let i = 0; i < first; i++) {
+    const el = document.createElement('div'); el.className = 'cal-day empty'; grid.appendChild(el);
+  }
+  for (let d = 1; d <= days; d++) {
+    const dow = (first + d - 1) % 7;
+    const k = key(st.year, st.month, d);
+    const att = getAtt(k);
+    const isWed = dow === 3;
+    const isMe = st.myName && att.includes(st.myName);
+    const isToday = today.getFullYear()===st.year && today.getMonth()===st.month && today.getDate()===d;
+    const el = document.createElement('div');
+    let cls = 'cal-day';
+    if (isWed) cls += ' wed-day';
+    else {
+      if (dow===0) cls += ' sun-day';
+      if (dow===6) cls += ' sat-day';
+      if (isMe) cls += ' my-checked';
+      if (isToday) cls += ' today';
+    }
+    el.className = cls;
+    el.innerHTML = '<span class="d-num">' + d + '</span>' +
+      (!isWed && att.length > 0 ? '<span class="d-count">' + att.length + '人</span>' : '') +
+      '<span class="mato-dot"></span>';
+    if (!isWed) el.onclick = () => openModal(d, dow, k);
+    grid.appendChild(el);
+  }
+}
+
+function renderList() {
+  const container = document.getElementById('listView');
+  container.innerHTML = '';
+  const days = daysInMonth(st.year, st.month);
+  const first = firstDow(st.year, st.month);
+  const counts = Array.from({length: days}, (_,i) => getAtt(key(st.year, st.month, i+1)).length);
+  const maxCnt = Math.max(...counts, 1);
+  for (let d = 1; d <= days; d++) {
+    const dow = (first + d - 1) % 7;
+    const k = key(st.year, st.month, d);
+    const cnt = getAtt(k).length;
+    const isWed = dow === 3;
+    const el = document.createElement('div');
+    el.className = 'list-item' + (isWed ? ' wed-item' : '');
+    const dowColor = isWed ? 'var(--wed-text)' : dow===0 ? '#C0392B' : dow===6 ? 'var(--blue)' : 'var(--text2)';
+    const pct = Math.round(cnt / maxCnt * 100);
+    el.innerHTML = '<span class="li-date">' + (st.month+1) + '/' + d + '</span>' +
+      '<span class="li-dow" style="color:' + dowColor + '">' + DOW[dow] + '</span>' +
+      (isWed
+        ? '<span style="font-size:11px;color:var(--wed-text)">練習なし</span>'
+        : '<div class="li-bar"><div class="li-fill" style="width:' + pct + '%"></div></div><span class="li-cnt">' + cnt + '人</span>'
+      );
+    if (!isWed) el.onclick = () => openModal(d, dow, k);
+    container.appendChild(el);
+  }
+}
+
+function renderMemberGrid() {
+  const grid = document.getElementById('memberGrid');
+  grid.innerHTML = '';
+  st.members.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'member-btn' + (st.myName === m ? ' me' : '');
+    btn.textContent = m;
+    btn.onclick = () => { st.myName = m; localStorage.setItem('kyudo_myname', m); renderAll(); };
+    grid.appendChild(btn);
+  });
+  const list = document.getElementById('memberList');
+  list.innerHTML = '';
+  st.members.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'member-chip-del';
+    chip.innerHTML = '<span>' + m + '</span><span class="del-x" onclick="removeMember(\'' + m.replace(/'/g,"\\'") + '\')">×</span>';
+    list.appendChild(chip);
+  });
+}
+
+function renderDowPills() {
+  const c = document.getElementById('dowPills');
+  c.innerHTML = '';
+  DOW.forEach((d, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'dow-pill' + (st.excludedDows.includes(i) ? ' excluded' : '');
+    pill.textContent = d + '曜';
+    pill.onclick = () => {
+      const idx = st.excludedDows.indexOf(i);
+      if (idx >= 0) st.excludedDows.splice(idx, 1); else st.excludedDows.push(i);
+      localStorage.setItem('kyudo_excluded', JSON.stringify(st.excludedDows));
+      renderDowPills();
+    };
+    c.appendChild(pill);
+  });
+}
+
+function renderAll() { renderCalendar(); renderList(); renderMemberGrid(); renderDowPills(); }
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  ['calendar','list','settings'].forEach((t,i) => {
+    if (t === name) document.querySelectorAll('.tab-btn')[i].classList.add('active');
+  });
+}
+
+function openModal(d, dow, k) {
+  st.activeModal = k;
+  document.getElementById('modalTitle').textContent = (st.month+1) + '月' + d + '日（' + DOW[dow] + '）';
+  refreshModal();
+  document.getElementById('overlay').classList.add('open');
+}
+
+function refreshModal() {
+  const k = st.activeModal;
+  const att = getAtt(k);
+  const ml = document.getElementById('modalAttendees');
+  ml.innerHTML = '';
+  att.forEach(n => {
+    const chip = document.createElement('div');
+    chip.className = 'att-chip'; chip.textContent = n;
+    ml.appendChild(chip);
+  });
+  document.getElementById('modalEmpty').style.display = att.length === 0 ? '' : 'none';
+  const btn = document.getElementById('modalAction');
+  const hint = document.getElementById('modalHint');
+  if (st.myName) {
+    btn.style.display = '';
+    const going = att.includes(st.myName);
+    btn.textContent = going ? '✓ 参加を取り消す（' + st.myName + '）' : '参加する（' + st.myName + '）';
+    btn.className = 'modal-action ' + (going ? 'going' : 'not-going');
+    hint.textContent = '';
+  } else {
+    btn.style.display = 'none';
+    hint.textContent = '設定タブで自分の名前を選ぶと参加登録できます';
+  }
+}
+
+async function toggleMyAttendance() {
+  const k = st.activeModal;
+  if (!k || !st.myName) return;
+  if (!st.attendance[k]) st.attendance[k] = [];
+  const arr = st.attendance[k];
+  const going = arr.includes(st.myName);
+  if (going) {
+    arr.splice(arr.indexOf(st.myName), 1);
+    await api('DELETE', 'attendance?date=eq.' + k + '&member_name=eq.' + encodeURIComponent(st.myName));
+  } else {
+    arr.push(st.myName);
+    await api('POST', 'attendance', {date: k, member_name: st.myName});
+  }
+  refreshModal(); renderCalendar(); renderList();
+  showToast(going ? '参加をキャンセルしました' : '参加登録しました！');
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function overlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+async function checkAll() {
+  if (!st.myName) { showToast('設定タブで自分の名前を選んでください'); return; }
+  const days = daysInMonth(st.year, st.month);
+  const first = firstDow(st.year, st.month);
+  const rows = [];
+  for (let d = 1; d <= days; d++) {
+    const dow = (first + d - 1) % 7;
+    if (dow === 3) continue;
+    const k = key(st.year, st.month, d);
+    if (!st.attendance[k]) st.attendance[k] = [];
+    if (!st.attendance[k].includes(st.myName)) { st.attendance[k].push(st.myName); rows.push({date: k, member_name: st.myName}); }
+  }
+  if (rows.length) await api('POST', 'attendance', rows);
+  renderCalendar(); renderList();
+  showToast('全日チェックしました');
+}
+
+async function clearAll() {
+  if (!st.myName) { showToast('設定タブで自分の名前を選んでください'); return; }
+  const days = daysInMonth(st.year, st.month);
+  const firstD = key(st.year, st.month, 1);
+  const lastD = key(st.year, st.month, days);
+  for (let d = 1; d <= days; d++) {
+    const k = key(st.year, st.month, d);
+    if (st.attendance[k]) st.attendance[k] = st.attendance[k].filter(n => n !== st.myName);
+  }
+  await api('DELETE', 'attendance?member_name=eq.' + encodeURIComponent(st.myName) + '&date=gte.' + firstD + '&date=lte.' + lastD);
+  renderCalendar(); renderList();
+  showToast('全てクリアしました');
+}
+
+async function checkExcluding() {
+  if (!st.myName) { showToast('設定タブで自分の名前を選んでください'); return; }
+  const days = daysInMonth(st.year, st.month);
+  const first = firstDow(st.year, st.month);
+  const rows = [];
+  for (let d = 1; d <= days; d++) {
+    const dow = (first + d - 1) % 7;
+    if (st.excludedDows.includes(dow) || dow === 3) continue;
+    const k = key(st.year, st.month, d);
+    if (!st.attendance[k]) st.attendance[k] = [];
+    if (!st.attendance[k].includes(st.myName)) { st.attendance[k].push(st.myName); rows.push({date: k, member_name: st.myName}); }
+  }
+  if (rows.length) await api('POST', 'attendance', rows);
+  renderCalendar(); renderList();
+  showToast('チェックしました');
+}
+
+function prevMonth() {
+  st.month--; if (st.month < 0) { st.month = 11; st.year--; }
+  renderCalendar(); renderList();
+}
+function nextMonth() {
+  st.month++; if (st.month > 11) { st.month = 0; st.year++; }
+  renderCalendar(); renderList();
+}
+
+async function addMember() {
+  const input = document.getElementById('newMemberInput');
+  const name = input.value.trim();
+  if (!name || st.members.includes(name)) return;
+  await api('POST', 'members', {name});
+  st.members.push(name);
+  input.value = '';
+  renderMemberGrid();
+  showToast(name + ' を追加しました');
+}
+
+async function removeMember(name) {
+  if (!confirm(name + ' を削除しますか？')) return;
+  await api('DELETE', 'members?name=eq.' + encodeURIComponent(name));
+  st.members = st.members.filter(m => m !== name);
+  if (st.myName === name) { st.myName = ''; localStorage.removeItem('kyudo_myname'); }
+  Object.keys(st.attendance).forEach(k => {
+    st.attendance[k] = st.attendance[k].filter(n => n !== name);
+  });
+  renderAll();
+  showToast(name + ' を削除しました');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function saveName() {
+  const name = document.getElementById('nameModalInput').value.trim();
+  if (!name) return;
+  st.myName = name;
+  localStorage.setItem('kyudo_myname', name);
+  document.getElementById('nameModalBg').classList.remove('open');
+  loadData();
+}
+
+document.getElementById('imgInput').addEventListener('change', function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const area = document.getElementById('imgArea');
+    area.innerHTML = '<img src="' + ev.target.result + '" alt="月間予定表">';
+    area.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('newMemberInput').addEventListener('keydown', e => { if (e.key === 'Enter') addMember(); });
+document.getElementById('nameModalInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
+
+// 初回起動
+if (!st.myName) {
+  document.getElementById('nameModalBg').classList.add('open');
+} else {
+  loadData();
+}
+</script>
+</body>
+</html>
