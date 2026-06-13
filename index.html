@@ -1,0 +1,50 @@
+import speech_recognition as sr
+import google.generativeai as genai
+import subprocess
+
+# --- 設定 ---
+# ※ 「Gemini Project 2」で作った新しいキーを入れてください
+API_KEY = "AIzaSyCi2SaKGZ7NbQwvJzjiXik_aBfwAZW7gwg" 
+
+# 【重要】ライブラリを最新の正式版(v1)で動くように設定します
+genai.configure(api_key=API_KEY, transport='rest')
+
+# モデル名をあえてフルネームで指定
+model = genai.GenerativeModel('models/gemini-1.5-flash')
+
+def speak(text):
+    print(f"ジャービス: {text}")
+    subprocess.run(["say", text])
+
+def listen():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("聴取中...")
+        try:
+            r.adjust_for_ambient_noise(source, duration=0.5)
+            audio = r.listen(source, timeout=10, phrase_time_limit=10)
+            text = r.recognize_google(audio, language='ja-JP')
+            print(f"あなた: {text}")
+            return text
+        except:
+            return None
+
+def main():
+    speak("全システムオンライン。準備完了です。")
+    while True:
+        user_input = listen()
+        if user_input:
+            if any(word in user_input for word in ["終了", "停止"]):
+                speak("了解しました。")
+                break
+            try:
+                # 簡潔に答えるよう指示
+                response = model.generate_content(f"あなたは執事ジャービスです。簡潔に：{user_input}")
+                speak(response.text)
+            except Exception as e:
+                # 404が出た場合、ここが反応します
+                print(f"詳細エラー: {e}")
+                speak("エラーが発生しました。")
+
+if __name__ == "__main__":
+    main()
