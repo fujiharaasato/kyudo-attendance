@@ -53,7 +53,6 @@
   .tab-content { display: none; padding: 14px; }
   .tab-content.active { display: block; }
 
-  /* 画像エリア */
   .img-drop {
     border: 1.5px dashed var(--border2); border-radius: var(--radius-lg);
     padding: 18px; text-align: center; cursor: pointer;
@@ -65,7 +64,6 @@
   .img-drop img { max-width: 100%; max-height: 240px; border-radius: 8px; }
   #imgInput { display: none; }
 
-  /* 一括 */
   .bulk-card {
     background: var(--surface); border-radius: var(--radius-lg);
     border: 0.5px solid var(--border); padding: 12px; margin-bottom: 14px;
@@ -85,7 +83,6 @@
   .dow-pill.excluded { background: var(--red); color: #fff; border-color: var(--red); }
   .dow-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
 
-  /* カレンダー */
   .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .cal-nav-btn {
     width: 32px; height: 32px; border-radius: 8px;
@@ -106,8 +103,8 @@
     transition: all .12s; min-height: 42px; gap: 1px;
   }
   .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
-  .cal-day.wed-day { background: var(--wed-bg); border-color: transparent; cursor: default; }
-  .cal-day.wed-day .d-num { color: var(--wed-text) !important; }
+  .cal-day.wed-day { background: var(--wed-bg); border-color: var(--border); }
+  .cal-day.wed-day .d-num { color: var(--wed-text); }
   .cal-day.sun-day .d-num { color: #C0392B; }
   .cal-day.sat-day .d-num { color: var(--blue); }
   .cal-day.today { border-color: var(--gold) !important; }
@@ -115,48 +112,34 @@
   .d-count { font-size: 9px; color: var(--text3); line-height: 1; }
   .cal-day.my-checked { background: var(--red-light); border-color: var(--red); }
   .cal-day.my-checked .d-num { color: var(--red); font-weight: 600; }
+  .cal-day.wed-day.my-checked { background: var(--red-light); border-color: var(--red); }
+  .cal-day.wed-day.my-checked .d-num { color: var(--red); }
   .mato-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); display: none; }
   .cal-day.my-checked .mato-dot { display: block; }
+  .note-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); display: none; }
+  .cal-day.has-note .note-dot { display: block; }
 
-  /* 一覧 */
   .list-item {
     display: flex; align-items: center; gap: 10px; padding: 9px 12px;
     background: var(--surface); border-radius: 10px; border: 0.5px solid var(--border);
     margin-bottom: 5px; cursor: pointer; transition: all .12s;
   }
-  .list-item.wed-item { background: var(--wed-bg); border-color: transparent; cursor: default; opacity: .55; }
+  .list-item.wed-item { background: var(--wed-bg); border-color: var(--border); opacity: .8; }
   .li-date { font-size: 13px; font-weight: 600; min-width: 52px; }
   .li-dow { font-size: 11px; min-width: 18px; }
   .li-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
   .li-fill { height: 100%; background: var(--red); border-radius: 3px; transition: width .3s; }
   .li-cnt { font-size: 12px; color: var(--text2); min-width: 36px; text-align: right; }
 
-  /* 設定 */
   .setting-card { background: var(--surface); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 14px; margin-bottom: 12px; }
   .setting-card-title { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .06em; margin-bottom: 10px; }
   .member-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-  .member-btn {
-    font-size: 13px; padding: 7px 14px; border-radius: 20px;
-    border: 0.5px solid var(--border2); background: var(--surface2); color: var(--text);
-    cursor: pointer; transition: all .12s;
-  }
-  .member-btn.me { background: var(--red); color: #fff; border-color: var(--red); }
-  .add-row { display: flex; gap: 8px; }
-  .name-input {
-    flex: 1; font-size: 13px; padding: 8px 12px;
-    border: 0.5px solid var(--border2); border-radius: 10px;
-    background: var(--surface2); color: var(--text); outline: none;
-  }
-  .name-input:focus { border-color: var(--red); }
-  .add-btn { padding: 8px 14px; background: var(--red); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; }
   .member-chip-del {
     display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
     padding: 5px 10px; border-radius: 20px; background: var(--surface2);
     border: 0.5px solid var(--border); color: var(--text);
   }
-  .del-x { color: var(--text3); cursor: pointer; font-size: 14px; }
 
-  /* モーダル */
   .overlay {
     display: none; position: fixed; inset: 0; z-index: 200;
     background: rgba(0,0,0,.5); align-items: flex-end; justify-content: center;
@@ -164,32 +147,56 @@
   .overlay.open { display: flex; }
   .modal {
     background: var(--surface); border-radius: 18px 18px 0 0;
-    padding: 20px; width: 100%; max-width: 480px; max-height: 80vh; overflow-y: auto;
+    padding: 20px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
   }
   .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .modal-title { font-size: 16px; font-weight: 600; }
   .modal-close { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 22px; line-height: 1; }
-  .attendee-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .modal-section-title {
+    font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .06em;
+    margin-bottom: 8px; margin-top: 16px;
+  }
+  .attendee-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
   .att-chip { font-size: 12px; padding: 5px 12px; border-radius: 20px; background: var(--red-light); color: var(--red); border: 0.5px solid var(--red-mid); }
-  .modal-empty { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+  .modal-empty { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
   .modal-action {
     width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600;
-    cursor: pointer; border: 1.5px solid var(--red); transition: all .15s;
+    cursor: pointer; border: 1.5px solid var(--red); transition: all .15s; margin-top: 12px;
   }
   .modal-action.going { background: var(--red); color: #fff; }
   .modal-action.not-going { background: transparent; color: var(--red); }
   .modal-hint { font-size: 11px; color: var(--text3); text-align: center; margin-top: 8px; }
 
-  /* ローディング */
-  .loading { text-align: center; padding: 40px; color: var(--text2); font-size: 13px; }
+  /* メモエリア */
+  .note-area {
+    width: 100%; min-height: 90px; padding: 10px 12px;
+    border: 0.5px solid var(--border2); border-radius: 10px;
+    background: var(--surface2); color: var(--text);
+    font-size: 13px; font-family: inherit; resize: vertical;
+    outline: none; line-height: 1.6;
+  }
+  .note-area:focus { border-color: var(--gold); }
+  .note-save-btn {
+    width: 100%; margin-top: 8px; padding: 10px;
+    background: var(--gold); color: #fff; border: none;
+    border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .note-saved-msg { font-size: 11px; color: var(--gold); text-align: center; margin-top: 6px; height: 16px; }
+
+  .wed-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px;
+    background: var(--wed-bg); color: var(--wed-text);
+    border: 0.5px solid var(--border2); margin-left: 6px; vertical-align: middle;
+  }
+
   .toast {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
     font-size: 13px; z-index: 300; opacity: 0; transition: opacity .3s; pointer-events: none;
+    white-space: nowrap;
   }
   .toast.show { opacity: 1; }
 
-  /* 名前入力モーダル */
   .name-modal-bg {
     display: none; position: fixed; inset: 0; z-index: 500;
     background: rgba(0,0,0,.6); align-items: center; justify-content: center;
@@ -197,14 +204,15 @@
   .name-modal-bg.open { display: flex; }
   .name-modal {
     background: var(--surface); border-radius: var(--radius-lg);
-    padding: 24px; width: 90%; max-width: 340px; text-align: center;
+    padding: 28px 24px; width: 90%; max-width: 340px; text-align: center;
   }
-  .name-modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
-  .name-modal p { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+  .name-modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .name-modal p { font-size: 13px; color: var(--text2); margin-bottom: 18px; line-height: 1.6; }
   .name-modal-input {
-    width: 100%; font-size: 15px; padding: 10px 14px;
+    width: 100%; font-size: 16px; padding: 10px 14px;
     border: 0.5px solid var(--border2); border-radius: 10px;
     background: var(--surface2); color: var(--text); outline: none; margin-bottom: 12px;
+    text-align: center;
   }
   .name-modal-btn {
     width: 100%; padding: 12px; background: var(--red); color: #fff;
@@ -237,7 +245,7 @@
   <div class="img-drop" id="imgArea" onclick="document.getElementById('imgInput').click()">
     <div style="font-size:28px;">🖼️</div>
     <div>月間予定表の画像を追加</div>
-    <div style="font-size:11px;color:var(--text3);">タップして選択</div>
+    <div style="font-size:11px;color:var(--text3);">タップして選択・全員に共有されます</div>
   </div>
   <input type="file" id="imgInput" accept="image/*">
 
@@ -266,16 +274,9 @@
 
 <div class="tab-content" id="tab-settings">
   <div class="setting-card">
-    <div class="setting-card-title">あなた（自分を選択）</div>
-    <div class="member-grid" id="memberGrid"></div>
-    <div style="font-size:11px;color:var(--text3);margin-top:8px;">選択した名前でカレンダーに反映されます</div>
-  </div>
-  <div class="setting-card">
-    <div class="setting-card-title">部員を追加</div>
-    <div class="add-row">
-      <input class="name-input" id="newMemberInput" placeholder="名前を入力..." type="text">
-      <button class="add-btn" onclick="addMember()">追加</button>
-    </div>
+    <div class="setting-card-title">あなた</div>
+    <div style="font-size:15px;font-weight:600;color:var(--red);margin-bottom:6px;" id="myNameDisplay"></div>
+    <div style="font-size:11px;color:var(--text3);">名前を変更するにはブラウザのサイトデータを消去してアクセスし直してください</div>
   </div>
   <div class="setting-card">
     <div class="setting-card-title">部員一覧</div>
@@ -290,6 +291,13 @@
       <span class="modal-title" id="modalTitle"></span>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
+
+    <div class="modal-section-title">📝 連絡・メモ</div>
+    <textarea class="note-area" id="noteArea" placeholder="この日の練習内容、連絡事項などを入力..."></textarea>
+    <button class="note-save-btn" onclick="saveNote()">💾 メモを保存（全員に共有）</button>
+    <div class="note-saved-msg" id="noteSavedMsg"></div>
+
+    <div class="modal-section-title">🎯 参加予定</div>
     <div class="attendee-list" id="modalAttendees"></div>
     <div class="modal-empty" id="modalEmpty" style="display:none">まだ誰も参加登録していません</div>
     <button class="modal-action going" id="modalAction" onclick="toggleMyAttendance()"></button>
@@ -300,9 +308,9 @@
 <!-- 名前入力モーダル -->
 <div class="name-modal-bg" id="nameModalBg">
   <div class="name-modal">
-    <div style="font-size:36px;margin-bottom:8px;">🎯</div>
+    <div style="font-size:40px;margin-bottom:10px;">🎯</div>
     <h2>弓道部 出席管理</h2>
-    <p>はじめに名前を入力してください</p>
+    <p>はじめに名前を入力してください<br><span style="font-size:11px;color:var(--text3);">※一度設定すると変更できません</span></p>
     <input class="name-modal-input" id="nameModalInput" placeholder="例：田中" type="text" maxlength="20">
     <button class="name-modal-btn" onclick="saveName()">はじめる</button>
   </div>
@@ -313,7 +321,6 @@
 <script>
 const SUPABASE_URL = 'https://ssgeklavhgodpzxobndr.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzZ2VrbGF2aGdvZHB6eG9ibmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTM4OTAsImV4cCI6MjA5Njg4OTg5MH0.dAqHhvk-7Hw01iryXVSPq16g-d0z6E3HrogX0zwXa1k';
-
 const DOW = ['日','月','火','水','木','金','土'];
 
 let st = {
@@ -322,6 +329,7 @@ let st = {
   myName: localStorage.getItem('kyudo_myname') || '',
   members: [],
   attendance: {},
+  notes: {},
   excludedDows: JSON.parse(localStorage.getItem('kyudo_excluded') || '[3]'),
   activeModal: null
 };
@@ -342,11 +350,51 @@ async function api(method, path, body) {
   return res;
 }
 
+async function uploadImage(file) {
+  const ext = file.name.split('.').pop();
+  const fileName = 'schedule-' + st.year + '-' + (st.month+1) + '.' + ext;
+  const res = await fetch(
+    SUPABASE_URL + '/storage/v1/object/schedule-images/' + fileName,
+    {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': file.type,
+        'x-upsert': 'true'
+      },
+      body: file
+    }
+  );
+  if (!res.ok) throw new Error('Upload failed');
+  const publicUrl = SUPABASE_URL + '/storage/v1/object/public/schedule-images/' + fileName;
+  await api('POST', 'schedule_image', {
+    id: st.year + '-' + (st.month+1),
+    year: st.year, month: st.month+1, image_url: publicUrl
+  });
+  return publicUrl;
+}
+
+async function loadScheduleImage() {
+  try {
+    const rows = await api('GET', 'schedule_image?year=eq.' + st.year + '&month=eq.' + (st.month+1) + '&select=image_url');
+    const area = document.getElementById('imgArea');
+    if (rows && rows.length > 0 && rows[0].image_url) {
+      area.innerHTML = '<img src="' + rows[0].image_url + '" alt="月間予定表">';
+      area.classList.add('has-img');
+    } else {
+      area.classList.remove('has-img');
+      area.innerHTML = '<div style="font-size:28px;">🖼️</div><div>月間予定表の画像を追加</div><div style="font-size:11px;color:var(--text3);">タップして選択・全員に共有されます</div>';
+    }
+  } catch(e) {}
+}
+
 async function loadData() {
   try {
-    const [members, att] = await Promise.all([
+    const [members, att, notes] = await Promise.all([
       api('GET', 'members?select=name&order=id'),
-      api('GET', 'attendance?select=date,member_name')
+      api('GET', 'attendance?select=date,member_name'),
+      api('GET', 'day_notes?select=date,note')
     ]);
     st.members = members.map(m => m.name);
     st.attendance = {};
@@ -354,31 +402,30 @@ async function loadData() {
       if (!st.attendance[a.date]) st.attendance[a.date] = [];
       st.attendance[a.date].push(a.member_name);
     });
+    st.notes = {};
+    notes.forEach(n => { if (n.note) st.notes[n.date] = n.note; });
+    await loadScheduleImage();
     renderAll();
   } catch(e) {
     showToast('データの読み込みに失敗しました');
   }
 }
 
-function key(y, m, d) {
-  return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-}
+function key(y, m, d) { return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); }
 function getAtt(k) { return st.attendance[k] || []; }
 function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
 function firstDow(y, m) { return new Date(y, m, 1).getDay(); }
 
 function renderCalendar() {
   document.getElementById('calLabel').textContent = st.year + '年' + (st.month+1) + '月';
-  document.getElementById('headerMonth').textContent = (st.month+1) + '月　' + (st.myName || '名前未設定');
+  document.getElementById('headerMonth').textContent = (st.month+1) + '月　' + (st.myName || '');
   const grid = document.getElementById('calGrid');
   grid.innerHTML = '';
-  [
-    {label:'日',cls:'sun-h'},{label:'月',cls:''},{label:'火',cls:''},
-    {label:'水',cls:'wed-h'},{label:'木',cls:''},{label:'金',cls:''},{label:'土',cls:'sat-h'}
+  [{label:'日',cls:'sun-h'},{label:'月',cls:''},{label:'火',cls:''},
+   {label:'水',cls:'wed-h'},{label:'木',cls:''},{label:'金',cls:''},{label:'土',cls:'sat-h'}
   ].forEach(d => {
     const el = document.createElement('div');
-    el.className = 'cal-dow ' + d.cls;
-    el.textContent = d.label;
+    el.className = 'cal-dow ' + d.cls; el.textContent = d.label;
     grid.appendChild(el);
   });
   const first = firstDow(st.year, st.month);
@@ -393,21 +440,22 @@ function renderCalendar() {
     const att = getAtt(k);
     const isWed = dow === 3;
     const isMe = st.myName && att.includes(st.myName);
+    const hasNote = !!st.notes[k];
     const isToday = today.getFullYear()===st.year && today.getMonth()===st.month && today.getDate()===d;
     const el = document.createElement('div');
     let cls = 'cal-day';
     if (isWed) cls += ' wed-day';
-    else {
-      if (dow===0) cls += ' sun-day';
-      if (dow===6) cls += ' sat-day';
-      if (isMe) cls += ' my-checked';
-      if (isToday) cls += ' today';
-    }
+    else if (dow===0) cls += ' sun-day';
+    else if (dow===6) cls += ' sat-day';
+    if (isMe) cls += ' my-checked';
+    if (isToday) cls += ' today';
+    if (hasNote) cls += ' has-note';
     el.className = cls;
     el.innerHTML = '<span class="d-num">' + d + '</span>' +
-      (!isWed && att.length > 0 ? '<span class="d-count">' + att.length + '人</span>' : '') +
-      '<span class="mato-dot"></span>';
-    if (!isWed) el.onclick = () => openModal(d, dow, k);
+      (att.length > 0 ? '<span class="d-count">' + att.length + '人</span>' : '') +
+      '<span class="mato-dot"></span>' +
+      '<span class="note-dot"></span>';
+    el.onclick = () => openModal(d, dow, k);
     grid.appendChild(el);
   }
 }
@@ -424,37 +472,29 @@ function renderList() {
     const k = key(st.year, st.month, d);
     const cnt = getAtt(k).length;
     const isWed = dow === 3;
+    const hasNote = !!st.notes[k];
     const el = document.createElement('div');
     el.className = 'list-item' + (isWed ? ' wed-item' : '');
     const dowColor = isWed ? 'var(--wed-text)' : dow===0 ? '#C0392B' : dow===6 ? 'var(--blue)' : 'var(--text2)';
     const pct = Math.round(cnt / maxCnt * 100);
     el.innerHTML = '<span class="li-date">' + (st.month+1) + '/' + d + '</span>' +
-      '<span class="li-dow" style="color:' + dowColor + '">' + DOW[dow] + '</span>' +
-      (isWed
-        ? '<span style="font-size:11px;color:var(--wed-text)">練習なし</span>'
-        : '<div class="li-bar"><div class="li-fill" style="width:' + pct + '%"></div></div><span class="li-cnt">' + cnt + '人</span>'
-      );
-    if (!isWed) el.onclick = () => openModal(d, dow, k);
+      '<span class="li-dow" style="color:' + dowColor + '">' + DOW[dow] + (isWed ? '<span class="wed-badge">水曜</span>' : '') + '</span>' +
+      '<div class="li-bar"><div class="li-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="li-cnt">' + cnt + '人</span>' +
+      (hasNote ? '<span style="font-size:14px;margin-left:4px;" title="メモあり">📝</span>' : '');
+    el.onclick = () => openModal(d, dow, k);
     container.appendChild(el);
   }
 }
 
-function renderMemberGrid() {
-  const grid = document.getElementById('memberGrid');
-  grid.innerHTML = '';
-  st.members.forEach(m => {
-    const btn = document.createElement('button');
-    btn.className = 'member-btn' + (st.myName === m ? ' me' : '');
-    btn.textContent = m;
-    btn.onclick = () => { st.myName = m; localStorage.setItem('kyudo_myname', m); renderAll(); };
-    grid.appendChild(btn);
-  });
+function renderSettings() {
+  document.getElementById('myNameDisplay').textContent = st.myName || '（未設定）';
   const list = document.getElementById('memberList');
   list.innerHTML = '';
   st.members.forEach(m => {
     const chip = document.createElement('div');
     chip.className = 'member-chip-del';
-    chip.innerHTML = '<span>' + m + '</span><span class="del-x" onclick="removeMember(\'' + m.replace(/'/g,"\\'") + '\')">×</span>';
+    chip.innerHTML = '<span>' + m + '</span>' + (m === st.myName ? ' <span style="font-size:10px;color:var(--red);">（あなた）</span>' : '');
     list.appendChild(chip);
   });
 }
@@ -476,7 +516,7 @@ function renderDowPills() {
   });
 }
 
-function renderAll() { renderCalendar(); renderList(); renderMemberGrid(); renderDowPills(); }
+function renderAll() { renderCalendar(); renderList(); renderSettings(); renderDowPills(); }
 
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -489,7 +529,11 @@ function showTab(name) {
 
 function openModal(d, dow, k) {
   st.activeModal = k;
-  document.getElementById('modalTitle').textContent = (st.month+1) + '月' + d + '日（' + DOW[dow] + '）';
+  const isWed = dow === 3;
+  document.getElementById('modalTitle').textContent =
+    (st.month+1) + '月' + d + '日（' + DOW[dow] + '）' + (isWed ? '　※水曜' : '');
+  document.getElementById('noteArea').value = st.notes[k] || '';
+  document.getElementById('noteSavedMsg').textContent = '';
   refreshModal();
   document.getElementById('overlay').classList.add('open');
 }
@@ -500,9 +544,7 @@ function refreshModal() {
   const ml = document.getElementById('modalAttendees');
   ml.innerHTML = '';
   att.forEach(n => {
-    const chip = document.createElement('div');
-    chip.className = 'att-chip'; chip.textContent = n;
-    ml.appendChild(chip);
+    const c = document.createElement('div'); c.className = 'att-chip'; c.textContent = n; ml.appendChild(c);
   });
   document.getElementById('modalEmpty').style.display = att.length === 0 ? '' : 'none';
   const btn = document.getElementById('modalAction');
@@ -515,8 +557,18 @@ function refreshModal() {
     hint.textContent = '';
   } else {
     btn.style.display = 'none';
-    hint.textContent = '設定タブで自分の名前を選ぶと参加登録できます';
+    hint.textContent = '名前が設定されていません';
   }
+}
+
+async function saveNote() {
+  const k = st.activeModal;
+  const note = document.getElementById('noteArea').value.trim();
+  await api('POST', 'day_notes', { date: k, note, updated_at: new Date().toISOString() });
+  if (note) st.notes[k] = note; else delete st.notes[k];
+  document.getElementById('noteSavedMsg').textContent = '✓ 保存しました';
+  setTimeout(() => { document.getElementById('noteSavedMsg').textContent = ''; }, 2000);
+  renderCalendar(); renderList();
 }
 
 async function toggleMyAttendance() {
@@ -540,13 +592,11 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 function overlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
 
 async function checkAll() {
-  if (!st.myName) { showToast('設定タブで自分の名前を選んでください'); return; }
+  if (!st.myName) { showToast('名前を設定してください'); return; }
   const days = daysInMonth(st.year, st.month);
   const first = firstDow(st.year, st.month);
   const rows = [];
   for (let d = 1; d <= days; d++) {
-    const dow = (first + d - 1) % 7;
-    if (dow === 3) continue;
     const k = key(st.year, st.month, d);
     if (!st.attendance[k]) st.attendance[k] = [];
     if (!st.attendance[k].includes(st.myName)) { st.attendance[k].push(st.myName); rows.push({date: k, member_name: st.myName}); }
@@ -557,7 +607,7 @@ async function checkAll() {
 }
 
 async function clearAll() {
-  if (!st.myName) { showToast('設定タブで自分の名前を選んでください'); return; }
+  if (!st.myName) { showToast('名前を設定してください'); return; }
   const days = daysInMonth(st.year, st.month);
   const firstD = key(st.year, st.month, 1);
   const lastD = key(st.year, st.month, days);
@@ -571,13 +621,13 @@ async function clearAll() {
 }
 
 async function checkExcluding() {
-  if (!st.myName) { showToast('設定タブで自分の名前を選んでください'); return; }
+  if (!st.myName) { showToast('名前を設定してください'); return; }
   const days = daysInMonth(st.year, st.month);
   const first = firstDow(st.year, st.month);
   const rows = [];
   for (let d = 1; d <= days; d++) {
     const dow = (first + d - 1) % 7;
-    if (st.excludedDows.includes(dow) || dow === 3) continue;
+    if (st.excludedDows.includes(dow)) continue;
     const k = key(st.year, st.month, d);
     if (!st.attendance[k]) st.attendance[k] = [];
     if (!st.attendance[k].includes(st.myName)) { st.attendance[k].push(st.myName); rows.push({date: k, member_name: st.myName}); }
@@ -589,34 +639,11 @@ async function checkExcluding() {
 
 function prevMonth() {
   st.month--; if (st.month < 0) { st.month = 11; st.year--; }
-  renderCalendar(); renderList();
+  renderCalendar(); renderList(); loadScheduleImage();
 }
 function nextMonth() {
   st.month++; if (st.month > 11) { st.month = 0; st.year++; }
-  renderCalendar(); renderList();
-}
-
-async function addMember() {
-  const input = document.getElementById('newMemberInput');
-  const name = input.value.trim();
-  if (!name || st.members.includes(name)) return;
-  await api('POST', 'members', {name});
-  st.members.push(name);
-  input.value = '';
-  renderMemberGrid();
-  showToast(name + ' を追加しました');
-}
-
-async function removeMember(name) {
-  if (!confirm(name + ' を削除しますか？')) return;
-  await api('DELETE', 'members?name=eq.' + encodeURIComponent(name));
-  st.members = st.members.filter(m => m !== name);
-  if (st.myName === name) { st.myName = ''; localStorage.removeItem('kyudo_myname'); }
-  Object.keys(st.attendance).forEach(k => {
-    st.attendance[k] = st.attendance[k].filter(n => n !== name);
-  });
-  renderAll();
-  showToast(name + ' を削除しました');
+  renderCalendar(); renderList(); loadScheduleImage();
 }
 
 function showToast(msg) {
@@ -625,30 +652,34 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function saveName() {
+async function saveName() {
   const name = document.getElementById('nameModalInput').value.trim();
   if (!name) return;
   st.myName = name;
   localStorage.setItem('kyudo_myname', name);
+  await api('POST', 'members', {name});
   document.getElementById('nameModalBg').classList.remove('open');
   loadData();
 }
 
-document.getElementById('imgInput').addEventListener('change', function(e) {
+document.getElementById('imgInput').addEventListener('change', async function(e) {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const area = document.getElementById('imgArea');
-    area.innerHTML = '<img src="' + ev.target.result + '" alt="月間予定表">';
+  const area = document.getElementById('imgArea');
+  area.innerHTML = '<div style="font-size:13px;color:var(--text3);">📤 アップロード中...</div>';
+  try {
+    const url = await uploadImage(file);
+    area.innerHTML = '<img src="' + url + '" alt="月間予定表">';
     area.classList.add('has-img');
-  };
-  reader.readAsDataURL(file);
+    showToast('予定表を共有しました！');
+  } catch(e) {
+    area.classList.remove('has-img');
+    area.innerHTML = '<div style="font-size:28px;">🖼️</div><div>月間予定表の画像を追加</div><div style="font-size:11px;color:var(--text3);">タップして選択・全員に共有されます</div>';
+    showToast('アップロードに失敗しました');
+  }
 });
 
-document.getElementById('newMemberInput').addEventListener('keydown', e => { if (e.key === 'Enter') addMember(); });
 document.getElementById('nameModalInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
 
-// 初回起動
 if (!st.myName) {
   document.getElementById('nameModalBg').classList.add('open');
 } else {
